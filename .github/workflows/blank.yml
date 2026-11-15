@@ -2,13 +2,12 @@ name: Build HoangHai APK
 
 on:
   push:
-    branches: [ main ]
+    branches: [ "main" ]
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    # XÓA dòng working-directory ở đây đi, để nó chạy ở thư mục gốc
 
     steps:
       - name: Checkout code
@@ -25,14 +24,23 @@ jobs:
         with:
           gradle-version: '8.5'
 
-      # TRỎ ĐÚNG VÀO THƯ MỤC CHỨA CODE
-      - name: Build Debug APK
-        run: gradle -p HoangHai assembleDebug --stacktrace
+      # BƯỚC QUAN TRỌNG: Tự động tìm thư mục chứa settings.gradle.kts
+      - name: Locate Project Root
+        id: locate
+        run: |
+          if [ -f "settings.gradle.kts" ]; then
+            echo "dir=." >> $GITHUB_OUTPUT
+          else
+            DIR=$(find . -name "settings.gradle.kts" -not -path "*/.*" | head -n 1 | xargs dirname)
+            echo "dir=$DIR" >> $GITHUB_OUTPUT
+          fi
 
-      - name: Upload APK Debug
+      - name: Build Debug APK
+        working-directory: ${{ steps.locate.outputs.dir }}
+        run: gradle assembleDebug --stacktrace
+
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: HoangHai-debug-apk
-          # TRỎ ĐÚNG VÀO NƠI XUẤT FILE APK
-          path: HoangHai/app/build/outputs/apk/debug/*.apk
-          retention-days: 30
+          name: HoangHai-apk
+          path: ${{ steps.locate.outputs.dir }}/app/build/outputs/apk/debug/*.apk
