@@ -2,43 +2,37 @@ name: Build HoangHai APK
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: HoangHai # <--- QUAN TRỌNG: Trỏ vào thư mục chứa code
+    # XÓA dòng working-directory ở đây đi, để nó chạy ở thư mục gốc
 
     steps:
-      - name: 📥 Checkout code
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: ☕ Setup JDK 17
+      - name: Setup JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: 🐘 Setup Gradle
+      - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: '8.5'
 
-      - name: 📝 Tạo file local.properties
-        run: echo "sdk.dir=/usr/local/lib/android/sdk" > local.properties
+      # TRỎ ĐÚNG VÀO THƯ MỤC CHỨA CODE
+      - name: Build Debug APK
+        run: gradle -p HoangHai assembleDebug --stacktrace
 
-      - name: 🔑 Cấp quyền thực thi gradlew
-        run: chmod +x gradlew || true
-
-      - name: 🛠️ Build Debug APK
-        run: gradle assembleDebug --stacktrace
-
-      - name: 📦 Upload APK Debug
+      - name: Upload APK Debug
         uses: actions/upload-artifact@v4
         with:
           name: HoangHai-debug-apk
+          # TRỎ ĐÚNG VÀO NƠI XUẤT FILE APK
           path: HoangHai/app/build/outputs/apk/debug/*.apk
           retention-days: 30
