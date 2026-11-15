@@ -3,13 +3,14 @@ name: Build HoangHai APK
 on:
   push:
     branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
-  workflow_dispatch:      # cho phép bấm nút build tay
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: HoangHai # <--- QUAN TRỌNG: Trỏ vào thư mục chứa code
 
     steps:
       - name: 📥 Checkout code
@@ -26,8 +27,11 @@ jobs:
         with:
           gradle-version: '8.5'
 
+      - name: 📝 Tạo file local.properties
+        run: echo "sdk.dir=/usr/local/lib/android/sdk" > local.properties
+
       - name: 🔑 Cấp quyền thực thi gradlew
-        run: chmod +x ./gradlew || true
+        run: chmod +x gradlew || true
 
       - name: 🛠️ Build Debug APK
         run: gradle assembleDebug --stacktrace
@@ -36,28 +40,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: HoangHai-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
+          path: HoangHai/app/build/outputs/apk/debug/*.apk
           retention-days: 30
-
-      - name: 🛠️ Build Release APK (unsigned)
-        run: gradle assembleRelease --stacktrace
-        continue-on-error: true
-
-      - name: 📦 Upload APK Release (unsigned)
-        uses: actions/upload-artifact@v4
-        with:
-          name: HoangHai-release-unsigned-apk
-          path: app/build/outputs/apk/release/*.apk
-          retention-days: 30
-          if-no-files-found: ignore
-
-      - name: 🚀 Tạo Release tự động (nếu gắn tag)
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            app/build/outputs/apk/debug/*.apk
-            app/build/outputs/apk/release/*.apk
-          generate_release_notes: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
