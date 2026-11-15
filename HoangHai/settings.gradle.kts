@@ -10,9 +10,8 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        maven("https://api.xposed.info/")  // cho Shizuku
+        maven("https://api.xposed.info/")
     }
 }
-
 rootProject.name = "HoangHai"
-include(":app")
+include(":app") // DÒNG NÀY BẮT BUỘC PHẢI CÓ
